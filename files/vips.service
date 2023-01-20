@@ -3,7 +3,7 @@ Description=Manage the VIPs
 After=network-online.target
 
 [Service]
-Type=oneshot
+Type=simple
 ExecStart=/opt/vips.sh
 RemainAfterExit=true
 StandardOutput=journal
