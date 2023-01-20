@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-VIPS="{{ vips | join(' ') }}"
 GATEWAY="{{ ansible_facts.default_ipv4.gateway }}"
 NETWORK_CIDR="{{ ansible_facts.default_ipv4.network }}/{{ (ansible_facts.default_ipv4.address + '/' + ansible_facts.default_ipv4.netmask) | ipaddr('prefix') }}"
 
@@ -102,7 +101,7 @@ while :; do
 {% endfor %}
 
     # Delete VIPs where all services using it are unhealthy
-    for VIP in $VIPS; do
+    for VIP in "{{ vips | join(' ') }}"; do
         if [[ ! " ${HEALTHY_VIPS[@]} " =~ " ${VIP} " ]]; then
             echo "VIP $VIP is not healthy for any service"
             if check_vip $VIP; then
