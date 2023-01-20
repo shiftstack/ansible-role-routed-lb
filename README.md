@@ -3,6 +3,22 @@ ansible-role-routed-lb
 
 This will deploy an advanced Load-Balancer capable of managing routed VIPs with FRR (using BGP) and load-balance traffic with HAproxy.
 
+So let's say, you're hosting a web service that is exposed by one or multiple virtual IP(s) called VIPs (note that it's not required).
+You want this VIP to be routed in your infrastructure thanks to BGP protocol.
+
+This role will do the following:
+* Deploy FRR and peer with your BGP neighbor(s). If the VIPs are created on the node, they'll be routed in your infrastructure.
+* Deploy HAproxy to load-balance and monitor your service.
+* The VIPs will be removed if no backend was found healthy for a given service, therefore not routed in BGP.
+* The VIPs will be created if a minimum number of backend(s) are found healthy for a given service, and therefore routed in BGP.
+
+So if you're hosting multiple Load-Balancers, your web traffic will be:
+* routed thanks to BGP
+* load-balanced at the VIP level thanks to BGP
+* load-balanced between healthy backends thanks to HAproxy
+* highly available since the VIPs are removed when all backends are found unhealthy for all services using them.
+
+
 Requirements
 ------------
 
