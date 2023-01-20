@@ -81,8 +81,8 @@ delete_vip() {
 
 while :; do
     VIP_NETMASK=32
-    # Reset unhealthy VIPs
-    UNHEALTHY_VIPS=()
+    # Reset healthy VIPs
+    HEALTHY_VIPS=()
 
 {% for service in configs[config].services %}
     VIPS="{{ service.vips | join(' ') }} "
@@ -90,23 +90,25 @@ while :; do
         if check_health "http://{{ ansible_facts.default_ipv4.address}}:{{ service.haproxy_monitor_port }}/check_{{ service.name }}"; then
             if check_vip $VIP; then
                 echo "VIP $VIP is healthy for service {{ service.name }}"
+                HEALTHY_VIPS+=($VIP)
             else
-                if [[ " ${UNHEALTHY_VIPS[@]} " =~ " ${VIP} " ]]; then
-                    echo "VIP $VIP is not healthy for another service, {{ service.name }} won't be reachable from that VIP then."
-                else
-                    create_vip $VIP/$VIP_NETMASK
-                    create_vip_routing $VIP
-                fi
+                create_vip $VIP/$VIP_NETMASK
+                create_vip_routing $VIP
             fi
         else
-            UNHEALTHY_VIPS+=($VIP)
-            if check_vip $VIP; then
-                delete_vip $VIP/$VIP_NETMASK
-            fi
             echo "VIP $VIP is not healthy for service {{ service.name }}"
         fi
     done
 {% endfor %}
 
+    # Delete VIPs where all services using it are unhealthy
+    for VIP in $VIPS; do
+        if [[ ! " ${HEALTHY_VIPS[@]} " =~ " ${VIP} " ]]; then
+            echo "VIP $VIP is not healthy for any service"
+            if check_vip $VIP; then
+                delete_vip $VIP/$VIP_NETMASK
+            fi
+        fi
+    done
     sleep 5
 done
