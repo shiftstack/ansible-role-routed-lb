@@ -87,9 +87,9 @@ while :; do
     VIPS="{{ service.vips | join(' ') }} "
     for VIP in $VIPS; do
         if check_health "http://{{ ansible_facts.default_ipv4.address}}:{{ service.haproxy_monitor_port }}/check_{{ service.name }}"; then
+            HEALTHY_VIPS+=($VIP)
             if check_vip $VIP; then
                 echo "VIP $VIP is healthy for service {{ service.name }}"
-                HEALTHY_VIPS+=($VIP)
             else
                 create_vip $VIP/$VIP_NETMASK
                 create_vip_routing $VIP
