@@ -81,6 +81,8 @@ delete_vip() {
 
 while :; do
     VIP_NETMASK=32
+    # Reset unhealthy VIPs
+    UNHEALTHY_VIPS=()
 
 {% for service in configs[config].services %}
     VIPS="{{ service.vips | join(' ') }} "
@@ -89,10 +91,15 @@ while :; do
             if check_vip $VIP; then
                 echo "VIP $VIP is healthy for service {{ service.name }}"
             else
-                create_vip $VIP/$VIP_NETMASK
-                create_vip_routing $VIP
+                if [[ " ${UNHEALTHY_VIPS[@]} " =~ " ${VIP} " ]]; then
+                    echo "VIP $VIP is not healthy for another service, {{ service.name }} won't be reachable from that VIP then."
+                else
+                    create_vip $VIP/$VIP_NETMASK
+                    create_vip_routing $VIP
+                fi
             fi
         else
+            UNHEALTHY_VIPS+=($VIP)
             if check_vip $VIP; then
                 delete_vip $VIP/$VIP_NETMASK
             fi
