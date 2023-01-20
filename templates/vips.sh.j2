@@ -103,7 +103,7 @@ while :; do
     # Delete VIPs where all services using it are unhealthy
     for VIP in "{{ vips | join(' ') }}"; do
         if [[ ! " ${HEALTHY_VIPS[@]} " =~ " ${VIP} " ]]; then
-            echo "VIP $VIP is not healthy for any service"
+            echo "VIP(s) $VIP not healthy for any service"
             if check_vip $VIP; then
                 delete_vip $VIP/$VIP_NETMASK
             fi
