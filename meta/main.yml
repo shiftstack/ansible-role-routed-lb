@@ -1,0 +1,11 @@
+galaxy_info:
+  author: The ShiftStack team
+  description: Deploy a routed load-balancer using BGP and HAproxy
+  company: Red Hat
+  license: Apache-2.0
+  min_ansible_version: 2.1
+  platforms:
+  - name: CentOS
+    versions:
+    - 9
+dependencies: []
