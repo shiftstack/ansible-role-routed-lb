@@ -1,0 +1,34 @@
+defaults
+  maxconn 20000
+  mode    http
+  option  dontlognull
+  retries 3
+  timeout http-request 10s
+  timeout http-keep-alive 2s
+  timeout queue 5s
+  timeout tunnel 2m
+  timeout client-fin 1s
+  timeout server-fin 1s
+
+{% for service in configs[config].services %}
+
+frontend {{ service.name }}
+  bind :::{{ service.frontend_port }} v4v6
+  default_backend {{ service.name }}
+
+frontend {{ service.name }}_check
+  bind :{{ service.haproxy_monitor_port }}
+  monitor-uri /check_{{ service.name }}
+  acl {{ service.name}}_backend_dead nbsrv({{ service.name }}) lt {{ service.min_backends }}
+  monitor fail if {{ service.name }}_backend_dead
+
+backend {{ service.name }}
+  option {{ service.healthcheck }}
+  option log-health-checks
+  balance {{ service.balance | default('roundrobin') }}
+{% for server in service.backend_hosts %}
+  server {{ server.name }} {{ server.ip }}:{{ service.backend_port }} {{ service.backend_opts }}
+{% endfor %}
+
+
+{% endfor %}

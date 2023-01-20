@@ -1,0 +1,12 @@
+[Unit]
+Description=Manage the VIPs
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/opt/vips.sh
+RemainAfterExit=true
+StandardOutput=journal
+
+[Install]
+WantedBy=multi-user.target

@@ -1,2 +1,6 @@
-localhost
-
+all:
+  hosts:
+    lb1:
+      ansible_host: 192.168.10.2
+      ansible_user: cloud-user
+      ansible_become: true

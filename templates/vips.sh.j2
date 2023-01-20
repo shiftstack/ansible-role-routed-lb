@@ -1,0 +1,112 @@
+#!/usr/bin/env bash
+
+VIPS="{{ vips | join(' ') }}"
+GATEWAY="{{ ansible_facts.default_ipv4.gateway }}"
+NETWORK_CIDR="{{ ansible_facts.default_ipv4.network }}/{{ (ansible_facts.default_ipv4.address + '/' + ansible_facts.default_ipv4.netmask) | ipaddr('prefix') }}"
+
+check_health()
+{
+    # check if the service is healthy if a curl returns 200.
+    # return 0 if healthy, 1 if not.
+    # takes one argument: the URL to check (must returns 200)
+    local url=$1
+    /usr/bin/timeout 1.9 curl -kLfs $url &>/dev/null
+}
+
+check_vip()
+{
+    # check if the VIP is assigned to this node.
+    # return 0 if it is, 1 if not.
+    # takes one argument: the VIP to check.
+    local vip=$1
+    if ip address show dev lo | grep -q $vip; then
+        echo "VIP $vip is assigned to this node"
+        return 0
+    else
+        echo "VIP $vip is not assigned to this node"
+        return 1
+    fi
+}
+
+# Since the VIP won't be in the same subnet of the load-balancer, we need to configure
+# a specific routing policy for that VIP. We spent a bit of time investigating it and the problem with the VIP
+# traffic going back to its source (specially for HTTPS) is that the traffic path is asymetric.
+# The destination MAC on the request was different than the source MAC the client was seeing on the reply;
+# and then packet were dropped.
+# We think that we have two options:
+# * Use a specific routing table that will route outgoing traffic coming from the VIP and supposed
+#   to go to the nodes subnet, to go through the gateway so that the traffic back follows the same
+#   path as the traffic in.
+# * For all the hosts in the nodes subnet, provide a direct route to reach the VIP.
+#
+# We decided to go with the first option (VIP traffic goes through router) because the VIP will be
+# active/active on multiple load-balancers.
+# While this sounds complex, this comes due to abusing the deployment having different subnet IPs
+# on the same segment and expect it to not go through the router, so we need to make symetric traffic.
+create_vip_routing()
+{
+    # prepare the host to route the VIP traffic through the gateway
+    # takes one argument: the VIP to route.
+    local vip=$1
+    if ! ip rule show table 168 | grep -q $vip; then
+        echo "Create ip rule for $NETWORK_CIDR in table 168"
+        ip rule add from $vip to $NETWORK_CIDR lookup 168
+    fi
+    if ! ip route show table 168 | grep -q $GATEWAY; then
+        echo "Create default route for table 168 via $GATEWAY"
+        ip route add default via $GATEWAY table 168
+    fi
+}
+
+create_vip()
+{
+    # create the VIP on the node.
+    # takes one argument: the VIP to create.
+    local vip=$1
+    if ! ip address show dev lo | grep -q $vip; then
+      echo "Creating VIP $vip"
+      ip address add $vip dev lo
+    fi
+}
+
+delete_vip() {
+    # delete the VIP on the node.
+    # takes one argument: the VIP to delete.
+    local vip=$1
+    if ip address show dev lo | grep -q $vip; then
+      echo "Deleting VIP $vip"
+      ip address del $vip dev lo
+    fi
+}
+
+while :; do
+    VIP_NETMASK=32
+    # Reset unhealthy VIPs
+    UNHEALTHY_VIPS=()
+
+{% for service in configs[config].services %}
+    VIPS="{{ service.vips | join(' ') }} "
+    for VIP in $VIPS; do
+        if check_health "http://{{ ansible_facts.default_ipv4.address}}:{{ service.haproxy_monitor_port }}/check_{{ service.name }}"; then
+            if check_vip $VIP; then
+                echo "VIP $VIP is healthy for service {{ service.name }}"
+            else
+                if [[ " ${UNHEALTHY_VIPS[@]} " =~ " ${VIP} " ]]; then
+                    echo "VIP $VIP is not healthy for another service, {{ service.name }} won't be reachable from that VIP then."
+                else
+                    create_vip $VIP/$VIP_NETMASK
+                    create_vip_routing $VIP
+                fi
+            fi
+        else
+            UNHEALTHY_VIPS+=($VIP)
+            if check_vip $VIP; then
+                delete_vip $VIP/$VIP_NETMASK
+            fi
+            echo "VIP $VIP is not healthy"
+        fi
+    done
+{% endfor %}
+
+    sleep 5
+done

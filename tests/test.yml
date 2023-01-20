@@ -1,5 +1,10 @@
 ---
-- hosts: localhost
-  remote_user: root
-  roles:
-    - ansible-role-routed-lb
+- hosts: lb1
+  vars:
+    config: lb1
+  tasks:
+    - name: Include vars for testing
+      ansible.builtin.include_vars: vars.yml
+    - name: Run the role
+      include_role:
+        name: routed-lb

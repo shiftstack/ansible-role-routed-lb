@@ -1,2 +1,86 @@
 ---
 # tasks file for ansible-role-routed-lb
+
+- name: Set fact for a unique list of VIPs
+  set_fact:
+    vips: "{{ (vips | default([]) + item.vips) | unique }}"
+  with_items: "{{ configs[config].services }}"
+
+- name: Install HAproxy
+  ansible.builtin.package:
+    name: haproxy
+    state: present
+
+- name: Configure HAproxy
+  ansible.builtin.template:
+    src: ./templates/haproxy.cfg.j2
+    dest: /etc/haproxy/haproxy.cfg
+    owner: root
+    group: root
+    mode: '640'
+
+- name: Enable and start HAproxy
+  ansible.builtin.service:
+    name: haproxy
+    enabled: yes
+    state: restarted
+
+- name: Install FRR
+  ansible.builtin.package:
+    name: frr
+    state: present
+
+- name: Enable FRR BGP daemon
+  ansible.builtin.lineinfile:
+    path: /etc/frr/daemons
+    regexp: "^bgpd="
+    line: "bgpd=yes"
+    owner: frr
+    group: frr
+    mode: '640'
+
+- name: Enable FRR BFD daemon
+  ansible.builtin.lineinfile:
+    path: /etc/frr/daemons
+    regexp: "^bfdd="
+    line: "bfdd=yes"
+    owner: frr
+    group: frr
+    mode: '640'
+
+- name: Configure FRR
+  ansible.builtin.template:
+    src: ./templates/frr.conf.j2
+    dest: /etc/frr/frr.conf
+    owner: frr
+    group: frr
+    mode: '640'
+
+- name: Enable and start FRR
+  ansible.builtin.service:
+    name: frr
+    enabled: yes
+    state: restarted
+
+- name: Create script to manage the VIPs
+  template:
+    src: "templates/vips.sh.j2"
+    dest: "/opt/vips.sh"
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Create systemd unit to manage the VIPs
+  template:
+    src: "files/vips.service"
+    dest: "/etc/systemd/system/vips.service"
+    owner: root
+    group: root
+    mode: '0744'
+
+- name: Activate the VIPs service
+  systemd:
+    name: "vips.service"
+    enabled: true
+    state: started
+    daemon_reload: true
