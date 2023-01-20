@@ -1,6 +1,6 @@
 defaults
   maxconn 20000
-  mode    http
+  mode    tcp
   option  dontlognull
   retries 3
   timeout http-request 10s
@@ -18,6 +18,7 @@ frontend {{ service.name }}
 
 frontend {{ service.name }}_check
   bind :{{ service.haproxy_monitor_port }}
+  mode http
   monitor-uri /check_{{ service.name }}
   acl {{ service.name}}_backend_dead nbsrv({{ service.name }}) lt {{ service.min_backends }}
   monitor fail if {{ service.name }}_backend_dead
