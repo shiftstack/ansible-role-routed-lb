@@ -6,6 +6,12 @@
     vips: "{{ (vips | default([]) + item.vips) | unique }}"
   with_items: "{{ configs[config].services }}"
 
+- name: Set haproxy_connect_any flag on and keep it persistent across reboots
+  ansible.posix.seboolean:
+    name: haproxy_connect_any
+    state: yes
+    persistent: yes
+
 - name: Install HAproxy
   ansible.builtin.package:
     name: haproxy
@@ -68,7 +74,7 @@
     dest: "/opt/vips.sh"
     owner: root
     group: root
-    mode: '0644'
+    mode: '0744'
 
 - name: Create systemd unit to manage the VIPs
   template:
@@ -76,7 +82,7 @@
     dest: "/etc/systemd/system/vips.service"
     owner: root
     group: root
-    mode: '0744'
+    mode: '0644'
 
 - name: Activate the VIPs service
   systemd:
