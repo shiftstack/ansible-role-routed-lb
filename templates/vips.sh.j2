@@ -12,21 +12,6 @@ check_health()
     /usr/bin/timeout 1.9 curl -kLfs $url &>/dev/null
 }
 
-check_vip()
-{
-    # check if the VIP is assigned to this node.
-    # return 0 if it is, 1 if not.
-    # takes one argument: the VIP to check.
-    local vip=$1
-    if ip address show dev lo | grep -q $vip; then
-        echo "VIP $vip is assigned to this node"
-        return 0
-    else
-        echo "VIP $vip is not assigned to this node"
-        return 1
-    fi
-}
-
 # Since the VIP won't be in the same subnet of the load-balancer, we need to configure
 # a specific routing policy for that VIP. We spent a bit of time investigating it and the problem with the VIP
 # traffic going back to its source (specially for HTTPS) is that the traffic path is asymetric.
@@ -88,12 +73,9 @@ while :; do
     for VIP in $VIPS; do
         if check_health "http://{{ ansible_facts.default_ipv4.address}}:{{ service.haproxy_monitor_port }}/check_{{ service.name }}"; then
             HEALTHY_VIPS+=($VIP)
-            if check_vip $VIP; then
-                echo "VIP $VIP is healthy for service {{ service.name }}"
-            else
-                create_vip $VIP/$VIP_NETMASK
-                create_vip_routing $VIP
-            fi
+            echo "VIP $VIP is healthy for service {{ service.name }}"
+            create_vip $VIP/$VIP_NETMASK
+            create_vip_routing $VIP
         else
             echo "VIP $VIP is not healthy for service {{ service.name }}"
         fi
@@ -104,9 +86,7 @@ while :; do
     for VIP in "{{ vips | join(' ') }}"; do
         if [[ ! " ${HEALTHY_VIPS[@]} " =~ " ${VIP} " ]]; then
             echo "VIP(s) $VIP not healthy for any service"
-            if check_vip $VIP; then
-                delete_vip $VIP/$VIP_NETMASK
-            fi
+            delete_vip $VIP/$VIP_NETMASK
         fi
     done
     sleep 5
