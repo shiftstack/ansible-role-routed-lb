@@ -96,7 +96,7 @@ while :; do
             if check_vip $VIP; then
                 delete_vip $VIP/$VIP_NETMASK
             fi
-            echo "VIP $VIP is not healthy"
+            echo "VIP $VIP is not healthy for service {{ service.name }}"
         fi
     done
 {% endfor %}
