@@ -6,6 +6,11 @@
     vips: "{{ (vips | default([]) + item.vips) | unique }}"
   with_items: "{{ configs[config].services }}"
 
+- name: Set fact for lists of IPv4 and IPv6 VIPs
+  set_fact:
+    vips_v4: "{{ vips|ansible.utils.ipv4 | default([]) }}"
+    vips_v6: "{{ vips|ansible.utils.ipv6 | default([]) }}"
+
 - name: Set haproxy_connect_any flag on and keep it persistent across reboots
   ansible.posix.seboolean:
     name: haproxy_connect_any
