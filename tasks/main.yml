@@ -2,20 +2,20 @@
 # tasks file for ansible-role-routed-lb
 
 - name: Set fact for a unique list of VIPs
-  set_fact:
+  ansible.builtin.set_fact:
     vips: "{{ (vips | default([]) + item.vips) | unique }}"
   with_items: "{{ configs[config].services }}"
 
 - name: Set fact for lists of IPv4 and IPv6 VIPs
-  set_fact:
-    vips_v4: "{{ vips|ansible.utils.ipv4 | default([]) }}"
-    vips_v6: "{{ vips|ansible.utils.ipv6 | default([]) }}"
+  ansible.builtin.set_fact:
+    vips_v4: "{{ vips | ansible.utils.ipv4 | default([]) }}"
+    vips_v6: "{{ vips | ansible.utils.ipv6 | default([]) }}"
 
 - name: Set haproxy_connect_any flag on and keep it persistent across reboots
   ansible.posix.seboolean:
     name: haproxy_connect_any
-    state: yes
-    persistent: yes
+    state: true
+    persistent: true
 
 - name: Install HAproxy
   ansible.builtin.package:
@@ -33,7 +33,7 @@
 - name: Enable and start HAproxy
   ansible.builtin.service:
     name: haproxy
-    enabled: yes
+    enabled: true
     state: restarted
 
 - name: Install FRR
@@ -70,11 +70,11 @@
 - name: Enable and start FRR
   ansible.builtin.service:
     name: frr
-    enabled: yes
+    enabled: true
     state: restarted
 
 - name: Create script to manage the VIPs
-  template:
+  ansible.builtin.template:
     src: "templates/vips.sh.j2"
     dest: "/opt/vips.sh"
     owner: root
@@ -82,7 +82,7 @@
     mode: '0744'
 
 - name: Create systemd unit to manage the VIPs
-  template:
+  ansible.builtin.template:
     src: "files/vips.service"
     dest: "/etc/systemd/system/vips.service"
     owner: root
@@ -90,7 +90,7 @@
     mode: '0644'
 
 - name: Activate the VIPs service
-  systemd:
+  ansible.builtin.systemd:
     name: "vips.service"
     enabled: true
     state: started
