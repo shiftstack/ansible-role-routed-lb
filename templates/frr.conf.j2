@@ -23,7 +23,7 @@ router bgp {{ configs[config].bgp_asn }}
 
 {% for neighbor in configs[config].bgp_neighbors %}
   neighbor uplink-{{ loop.index }} peer-group
-  neighbor uplink-{{ loop.index }} remote-as external
+  neighbor uplink-{{ loop.index }} remote-as {{ neighbor.remote_as | default('external') }}
   neighbor uplink-{{ loop.index }} bfd
   neighbor uplink-{{ loop.index }} bfd profile lb
   neighbor uplink-{{ loop.index }} password {{ neighbor.password }}
@@ -31,15 +31,11 @@ router bgp {{ configs[config].bgp_asn }}
 {% endfor %}
 
   address-family ipv4 unicast
-    redistribute connected route-map vip
+    redistribute connected route-map vipsv4
   exit-address-family
 
   address-family ipv6 unicast
-    redistribute connected route-map vip
-    neighbor uplink activate
-  exit-address-family
-
-  address-family l2vpn evpn
+    redistribute connected route-map vipsv6
     neighbor uplink activate
   exit-address-family
 
@@ -51,9 +47,20 @@ bfd
     transmit-interval 500
     receive-interval 500
 
-{% for vip in vips %}
-access-list 7 seq {{ loop.index }} permit {{ vip }}/32
+{% for vip in vips_v4 %}
+access-list vipsv4 seq {{ loop.index }} permit {{ vip }}/32
 {% endfor %}
 
-route-map vip permit 1
-  match ip address 7
+{% for vip in vips_v6 %}
+access-list vipsv6 seq {{ loop.index }} permit {{ vip }}/128
+{% endfor %}
+
+{% if vips_v4 | length > 0 %}
+route-map vipsv4 permit 1
+  match ip address vipsv4
+{% endif %}
+
+{% if vips_v6 | length > 0 %}
+route-map vipsv6 permit 1
+  match ipv6 address vipsv6
+{% endif %}
