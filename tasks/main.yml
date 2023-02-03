@@ -36,42 +36,46 @@
     enabled: true
     state: restarted
 
-- name: Install FRR
-  ansible.builtin.package:
-    name: frr
-    state: present
+- name: Optionally deploy FRR
+  when:
+    - (configs[config].bgp_neighbors | default([]) | length) > 0
+  block:
+    - name: Install FRR
+      ansible.builtin.package:
+        name: frr
+        state: present
 
-- name: Enable FRR BGP daemon
-  ansible.builtin.lineinfile:
-    path: /etc/frr/daemons
-    regexp: "^bgpd="
-    line: "bgpd=yes"
-    owner: frr
-    group: frr
-    mode: '640'
+    - name: Enable FRR BGP daemon
+      ansible.builtin.lineinfile:
+        path: /etc/frr/daemons
+        regexp: "^bgpd="
+        line: "bgpd=yes"
+        owner: frr
+        group: frr
+        mode: '640'
 
-- name: Enable FRR BFD daemon
-  ansible.builtin.lineinfile:
-    path: /etc/frr/daemons
-    regexp: "^bfdd="
-    line: "bfdd=yes"
-    owner: frr
-    group: frr
-    mode: '640'
+    - name: Enable FRR BFD daemon
+      ansible.builtin.lineinfile:
+        path: /etc/frr/daemons
+        regexp: "^bfdd="
+        line: "bfdd=yes"
+        owner: frr
+        group: frr
+        mode: '640'
 
-- name: Configure FRR
-  ansible.builtin.template:
-    src: ./templates/frr.conf.j2
-    dest: /etc/frr/frr.conf
-    owner: frr
-    group: frr
-    mode: '640'
+    - name: Configure FRR
+      ansible.builtin.template:
+        src: ./templates/frr.conf.j2
+        dest: /etc/frr/frr.conf
+        owner: frr
+        group: frr
+        mode: '640'
 
-- name: Enable and start FRR
-  ansible.builtin.service:
-    name: frr
-    enabled: true
-    state: restarted
+    - name: Enable and start FRR
+      ansible.builtin.service:
+        name: frr
+        enabled: true
+        state: restarted
 
 - name: Create script to manage the VIPs
   ansible.builtin.template:

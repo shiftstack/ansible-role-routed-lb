@@ -7,14 +7,14 @@ So let's say, you're hosting a web service that is exposed by one or multiple vi
 You want this VIP to be routed in your infrastructure thanks to BGP protocol.
 
 This role will do the following:
-* Deploy FRR and peer with your BGP neighbor(s). If the VIPs are created on the node, they'll be routed in your infrastructure.
+* If BGP neighbors are provided in the config, it'll deploy FRR and peer with your BGP neighbor(s). If the VIPs are created on the node, they'll be routed in your infrastructure.
 * Deploy HAproxy to load-balance and monitor your service.
-* The VIPs will be removed if no backend was found healthy for a given service, therefore not routed in BGP.
-* The VIPs will be created if a minimum number of backend(s) are found healthy for a given service, and therefore routed in BGP.
+* The VIPs will be removed if no backend was found healthy for a given service, therefore not routed in BGP if FRR is deployed
+* The VIPs will be created if a minimum number of backend(s) are found healthy for a given service, and therefore routed in BGP if FRR is deployed.
 
 So if you're hosting multiple Load-Balancers, your web traffic will be:
-* routed thanks to BGP
-* load-balanced at the VIP level thanks to BGP
+* routed thanks to BGP if FRR is deployed
+* load-balanced at the VIP level thanks to BGP if FRR is deployed
 * load-balanced between healthy backends thanks to HAproxy
 * highly available since the VIPs are removed when all backends are found unhealthy for all services using them.
 
@@ -33,7 +33,7 @@ Only `configs` needs to be set, as a dictionary:
 configs:
   lb1:
     bgp_asn: <BGP ASN>
-    bgp_neighbors:
+    bgp_neighbors: # optional, when not set FRR won't be deployed
       - ip: <IP of a BGP router>
         password: <BGP password>
     services:
