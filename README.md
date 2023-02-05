@@ -1,6 +1,8 @@
 ansible-role-routed-lb
 ======================
 
+[![ansible-lint](https://github.com/shiftstack/ansible-role-routed-lb/actions/workflows/lint.yml/badge.svg)](https://github.com/shiftstack/ansible-role-routed-lb/actions/workflows/lint.yml)
+
 This will deploy an advanced Load-Balancer capable of managing routed VIPs with FRR (using BGP) and load-balance traffic with HAproxy.
 
 So let's say, you're hosting a web service that is exposed by one or multiple virtual IP(s) called VIPs (note that it's not required).
