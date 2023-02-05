@@ -26,6 +26,14 @@ Requirements
 
 For now, we test this module on CentOS 9 Stream.
 
+Installation
+------------
+
+```
+ansible-galaxy install emilienm.ansible_role_routed_lb
+```
+
+
 Role Variables
 --------------
 
