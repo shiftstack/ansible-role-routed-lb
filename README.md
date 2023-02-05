@@ -31,6 +31,7 @@ Installation
 
 ```
 ansible-galaxy install emilienm.routed_lb
+ansible-galaxy collection install ansible.posix
 ```
 
 
@@ -67,7 +68,7 @@ Have a look at `tests/vars.yml` for a complete example.
 Dependencies
 ------------
 
-None.
+* `ansible.posix`
 
 Example Playbook
 ----------------
