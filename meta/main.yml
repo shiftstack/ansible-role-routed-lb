@@ -2,7 +2,7 @@
 dependencies: []
 
 galaxy_info:
-  role_name: routed-lb
+  role_name: routed_lb
   author: Emilien Macchi
   description: "Ansible role to deploy a Load-Balancer capable of managing VIPs routed with BGP"
   company: "Red Hat"
