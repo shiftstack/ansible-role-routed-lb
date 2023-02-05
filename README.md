@@ -30,7 +30,7 @@ Installation
 ------------
 
 ```
-ansible-galaxy install emilienm.ansible_role_routed_lb
+ansible-galaxy install emilienm.routed_lb
 ```
 
 
@@ -83,7 +83,7 @@ Create a file named `playbook.yml`:
       ansible.builtin.include_vars: vars.yml
     - name: Run the role
       include_role:
-        name: routed-lb
+        name: emilienm.routed_lb
 ```
 
 And then create a file named `inventory` for the Ansible inventory:
