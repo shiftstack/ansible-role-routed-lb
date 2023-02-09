@@ -39,6 +39,7 @@
 - name: Optionally deploy FRR
   when:
     - (configs[config].bgp_neighbors | default([]) | length) > 0
+    - (vips | default([]) | length ) > 0
   block:
     - name: Install FRR
       ansible.builtin.package:
@@ -77,25 +78,29 @@
         enabled: true
         state: restarted
 
-- name: Create script to manage the VIPs
-  ansible.builtin.template:
-    src: "templates/vips.sh.j2"
-    dest: "/opt/vips.sh"
-    owner: root
-    group: root
-    mode: '0744'
+- name: Optionally manage the VIPs
+  when:
+    - (vips | default([]) | length ) > 0
+  block:
+    - name: Create script to manage the VIPs
+      ansible.builtin.template:
+        src: "templates/vips.sh.j2"
+        dest: "/opt/vips.sh"
+        owner: root
+        group: root
+        mode: '0744'
 
-- name: Create systemd unit to manage the VIPs
-  ansible.builtin.template:
-    src: "files/vips.service"
-    dest: "/etc/systemd/system/vips.service"
-    owner: root
-    group: root
-    mode: '0644'
+    - name: Create systemd unit to manage the VIPs
+      ansible.builtin.template:
+        src: "files/vips.service"
+        dest: "/etc/systemd/system/vips.service"
+        owner: root
+        group: root
+        mode: '0644'
 
-- name: Activate the VIPs service
-  ansible.builtin.systemd:
-    name: "vips.service"
-    enabled: true
-    state: started
-    daemon_reload: true
+    - name: Activate the VIPs service
+      ansible.builtin.systemd:
+        name: "vips.service"
+        enabled: true
+        state: started
+        daemon_reload: true
