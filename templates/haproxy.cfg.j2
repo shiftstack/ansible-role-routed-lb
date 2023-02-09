@@ -24,8 +24,10 @@ frontend {{ service.name }}_check
   monitor fail if {{ service.name }}_backend_dead
 
 backend {{ service.name }}
+{% if service.healthcheck is defined %}
   option {{ service.healthcheck }}
   option log-health-checks
+{% endif %}
   balance {{ service.balance | default('roundrobin') }}
 {% for server in service.backend_hosts %}
   server {{ server.name }} {{ server.ip }}:{{ service.backend_port }} {{ service.backend_opts }}

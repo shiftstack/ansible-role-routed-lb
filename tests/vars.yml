@@ -67,7 +67,6 @@ configs:
         vips:
           - 192.168.100.240
         min_backends: 1
-        healthcheck: "httpchk GET /config/master HTTP/1.0"
         frontend_port: 22623
         haproxy_monitor_port: 8084
         balance: roundrobin
