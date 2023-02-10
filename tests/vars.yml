@@ -9,8 +9,6 @@ configs:
         password: f00barZ
     services:
       - name: api
-        vips:
-          - 192.168.100.240
         min_backends: 1
         healthcheck: "httpchk GET /readyz HTTP/1.0"
         balance: roundrobin
@@ -42,8 +40,6 @@ configs:
           - name: node-20
             ip: 192.168.10.20
       - name: ingress_http
-        vips:
-          - 192.168.100.250
         min_backends: 1
         healthcheck: "httpchk GET /healthz/ready HTTP/1.0"
         frontend_port: 80
@@ -53,8 +49,6 @@ configs:
         backend_port: 80
         backend_hosts: *lb1_hosts
       - name: ingress_https
-        vips:
-          - 192.168.100.250
         min_backends: 1
         healthcheck: "httpchk GET /healthz/ready HTTP/1.0"
         frontend_port: 443
@@ -64,8 +58,6 @@ configs:
         backend_port: 443
         backend_hosts: *lb1_hosts
       - name: mcs
-        vips:
-          - 192.168.100.240
         min_backends: 1
         frontend_port: 22623
         haproxy_monitor_port: 8084

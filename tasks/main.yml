@@ -3,7 +3,7 @@
 
 - name: Set fact for a unique list of VIPs
   ansible.builtin.set_fact:
-    vips: "{{ (vips | default([]) + item.vips) | unique }}"
+    vips: "{{ (vips | default([]) + (item.vips | default([]))) | unique }}"
   with_items: "{{ configs[config].services }}"
 
 - name: Set fact for lists of IPv4 and IPv6 VIPs
