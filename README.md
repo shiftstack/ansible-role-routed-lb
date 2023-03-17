@@ -42,6 +42,7 @@ Only `configs` needs to be set, as a dictionary:
 ```
 configs:
   lb1:
+    haproxy_stats: true # enable HAproxy stats on url http://lb-ip:8404/stats
     bgp_asn: <BGP ASN>
     bgp_neighbors: # optional, when not set FRR won't be deployed
       - ip: <IP of a BGP router>

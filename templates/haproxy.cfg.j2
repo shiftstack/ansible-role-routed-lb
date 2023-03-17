@@ -10,6 +10,15 @@ defaults
   timeout client-fin 1s
   timeout server-fin 1s
 
+{% if haproxy_stats | default(true) %}
+frontend stats
+ mode http
+ bind :8404
+ stats enable
+ stats uri /stats
+ stats refresh 10s
+{% endif %}
+
 {% for service in configs[config].services %}
 
 frontend {{ service.name }}
