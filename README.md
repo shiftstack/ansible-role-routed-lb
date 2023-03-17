@@ -13,6 +13,7 @@ This role will do the following:
 * Deploy HAproxy to load-balance and monitor your service.
 * If the VIPs are provided in the config, they will be created if a minimum number of backend(s) are found healthy for a given service, and therefore routed in BGP if FRR is deployed.
 * They will be removed if no backend was found healthy for a given service, therefore not routed in BGP if FRR is deployed
+* If `strict_vips` is set to true in a LB config, all services using that VIP must be healthy, or the VIP won't be created. The default is set to `false`.
 
 So if you're hosting multiple Load-Balancers, your web traffic will be:
 * routed thanks to BGP if FRR is deployed
@@ -47,6 +48,7 @@ configs:
     bgp_neighbors: # optional, when not set FRR won't be deployed
       - ip: <IP of a BGP router>
         password: <BGP password>
+    strict_vips: true
     services:
       - name: <Service name (e.g. api)>
         vips:

@@ -2,6 +2,7 @@
 
 GATEWAY="{{ ansible_facts.default_ipv4.gateway }}"
 NETWORK_CIDR="{{ ansible_facts.default_ipv4.network }}/{{ (ansible_facts.default_ipv4.address + '/' + ansible_facts.default_ipv4.netmask) | ipaddr('prefix') }}"
+STRICT_VIPS="{{ configs[config].strict_vips | default('false') }}"
 
 check_health()
 {
@@ -65,8 +66,9 @@ delete_vip() {
 
 while :; do
     VIP_NETMASK=32
-    # Reset healthy VIPs
+    # Reset healthy and unhealthy VIPs
     HEALTHY_VIPS=()
+    UNHEALTHY_VIPS=()
 
 {% for service in configs[config].services %}
     VIPS="{{ service.vips | join(' ') }} "
@@ -74,13 +76,22 @@ while :; do
         if check_health "http://{{ ansible_facts.default_ipv4.address}}:{{ service.haproxy_monitor_port }}/check_{{ service.name }}"; then
             HEALTHY_VIPS+=($VIP)
             echo "VIP $VIP is healthy for service {{ service.name }}"
-            create_vip $VIP/$VIP_NETMASK
-            create_vip_routing $VIP
         else
+	    UNHEALTHY_VIPS+=($VIP)
             echo "VIP $VIP is not healthy for service {{ service.name }}"
         fi
     done
 {% endfor %}
+
+    for VIP in ${HEALTHY_VIPS[@]}; do
+	if [[ "${STRICT_VIPS}" == "True" ]] && [[ " ${UNHEALTHY_VIPS[@]} " =~ " ${VIP} " ]]; then
+	    echo "VIP $VIP is not healthy for all services, it won't be created"
+	    delete_vip $VIP/$VIP_NETMASK
+	else
+	    create_vip $VIP/$VIP_NETMASK
+	    create_vip_routing $VIP
+	fi
+    done
 
     # Delete VIPs where all services using it are unhealthy
     for VIP in {{ vips | join(' ') }}; do
