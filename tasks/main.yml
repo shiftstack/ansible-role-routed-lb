@@ -102,5 +102,5 @@
       ansible.builtin.systemd:
         name: "vips.service"
         enabled: true
-        state: started
+        state: restarted
         daemon_reload: true
