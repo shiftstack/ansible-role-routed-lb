@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 GATEWAY="{{ ansible_facts.default_ipv4.gateway }}"
-NETWORK_CIDR="{{ ansible_facts.default_ipv4.network }}/{{ (ansible_facts.default_ipv4.address + '/' + ansible_facts.default_ipv4.netmask) | ipaddr('prefix') }}"
+NETWORK_CIDR="{{ ansible_facts.default_ipv4.network }}/{{ (ansible_facts.default_ipv4.address + '/' + ansible_facts.default_ipv4.netmask) | ansible.utils.ipaddr('prefix') }}"
 STRICT_VIPS="{{ configs[config].strict_vips | default('false') }}"
 
 check_health()

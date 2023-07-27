@@ -31,7 +31,7 @@ Installation
 
 ```
 ansible-galaxy install emilienm.routed_lb
-ansible-galaxy collection install ansible.posix
+ansible-galaxy collection install ansible.posix ansible.utils
 ```
 
 
