@@ -2,9 +2,10 @@
 - hosts: lb1
   vars:
     config: lb1
+  name: Test playbook
   tasks:
     - name: Include vars for testing
       ansible.builtin.include_vars: vars.yml
     - name: Run the role
-      include_role:
+      ansible.builtin.include_role:
         name: routed-lb
