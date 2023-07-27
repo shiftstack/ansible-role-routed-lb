@@ -12,16 +12,7 @@ galaxy_info:
   description: "Ansible role to deploy a Load-Balancer capable of managing VIPs routed with BGP"
   company: "Red Hat"
   license: "Apache 2.0"
-  min_ansible_version: 2.9
-  platforms:
-    - name: EL
-      versions:
-        - 7
-        - 8
-        - 9
-    - name: Fedora
-      versions:
-        - all
+  min_ansible_version: "2.9"
   galaxy_tags:
     - haproxy
     - frr
